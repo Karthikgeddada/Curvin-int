@@ -99,7 +99,7 @@ with st.sidebar:
     st.page_link("pages/3_Chat.py",      label="💬  Chat with News")
     st.markdown("---")
     st.markdown(
-        '<span style="color:#475569;font-size:0.75rem;">Powered by FinBERT · Groq LLaMA 3<br>Data: Google News RSS</span>',
+        '<span style="color:#475569;font-size:0.75rem;">Powered by FinBERT · OpenRouter LLaMA 3.3 70B<br>Data: Google News RSS</span>',
         unsafe_allow_html=True,
     )
 
@@ -112,7 +112,7 @@ st.markdown("""
     </h1>
     <p style="color:#4B5563; font-size: 1.15rem; max-width: 600px; margin: 0 auto 2rem;">
         Institutional-grade market intelligence powered by FinBERT sentiment analysis 
-        and Groq LLaMA 3. Monitor 30+ industries in real time.
+        and OpenRouter LLaMA 3.3 70B. Monitor 30+ industries in real time.
     </p>
 </div>
 """, unsafe_allow_html=True)

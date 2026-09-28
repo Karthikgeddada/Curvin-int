@@ -1,26 +1,28 @@
 import os
 import time
 import logging
-from groq import Groq, RateLimitError, APIError
+from openai import OpenAI, RateLimitError, APIError
 from utils.rate_limiter import KeyRotator
 
-logger = logging.getLogger("groq_client")
+logger = logging.getLogger("openrouter_client")
 
 
-class MultiKeyGroqClient:
+class MultiKeyOpenRouterClient:
     """
-    Enterprise-grade Groq client with:
+    Enterprise-grade OpenRouter client with LLaMA 3.3 70B Instruct:
     - Dynamic API key rotation across N keys
     - Per-key sliding-window rate limiting
     - Exponential backoff on RateLimitError
     - Automatic retry with key fallback on APIError
+    - OpenAI-compatible interface via OpenRouter proxy
     """
 
     def __init__(self, api_keys: list, requests_per_minute: int = 25):
         if not api_keys:
-            raise ValueError("At least one Groq API key must be provided.")
+            raise ValueError("At least one OpenRouter API key must be provided.")
         self.rotator = KeyRotator(api_keys, requests_per_minute)
         self.max_retries = len(api_keys) * 2  # Allow each key at least 2 attempts
+        self.model = "meta-llama/llama-3.3-70b-instruct"
 
     def generate_report(
         self,
@@ -31,6 +33,7 @@ class MultiKeyGroqClient:
         """
         Generates a completion with retry + key-rotation logic.
         Passing response_format={"type":"json_object"} enables structured JSON output.
+        Uses OpenRouter's OpenAI-compatible API.
         """
         last_error = None
         for attempt in range(self.max_retries):
@@ -38,12 +41,18 @@ class MultiKeyGroqClient:
             limiter.wait_if_needed()
 
             try:
-                client = Groq(api_key=api_key)
+                client = OpenAI(
+                    base_url="https://openrouter.ai/api/v1",
+                    api_key=api_key,
+                    default_headers={
+                        "HTTP-Referer": "https://github.com/Karthikgeddada/Curvin-intelligence",
+                        "X-Title": "Curvin Intelligence",
+                    },
+                )
 
-                # Build kwargs conditionally — passing response_format=None
-                # causes a Groq API validation error, so only include when set.
+                # Build kwargs conditionally
                 kwargs = dict(
-                    model="llama-3.3-70b-versatile",
+                    model=self.model,
                     messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt},
@@ -69,18 +78,18 @@ class MultiKeyGroqClient:
             except APIError as e:
                 last_error = e
                 logger.warning(
-                    f"Groq APIError on attempt {attempt+1}: {e}. "
+                    f"OpenRouter APIError on attempt {attempt+1}: {e}. "
                     f"Rotating key and retrying..."
                 )
                 if attempt == self.max_retries - 1:
                     raise RuntimeError(
-                        f"Groq API failed after {self.max_retries} attempts. "
+                        f"OpenRouter API failed after {self.max_retries} attempts. "
                         f"Last error: {e}"
                     ) from e
                 time.sleep(1 + attempt)
 
         raise RuntimeError(
-            f"Groq API exhausted all {self.max_retries} retries. "
+            f"OpenRouter API exhausted all {self.max_retries} retries. "
             f"Last error: {last_error}"
         )
 

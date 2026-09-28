@@ -1,10 +1,10 @@
-from groq_client import MultiKeyGroqClient
+from groq_client import MultiKeyOpenRouterClient
 import streamlit as st
 
 class NewsChat:
-    """Uses Groq for RAG-lite chat with local news context."""
+    """Uses OpenRouter LLaMA 3.3 70B for RAG-lite chat with local news context."""
     def __init__(self, api_keys: list[str]):
-        self.client = MultiKeyGroqClient(api_keys)
+        self.client = MultiKeyOpenRouterClient(api_keys)
 
     def handle_query(self, query: str, articles: list[dict], history: list[dict] = None) -> str:
         """Processes a chat query with grounded article context."""

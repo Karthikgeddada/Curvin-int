@@ -32,8 +32,8 @@ with st.sidebar:
     
     st.markdown("---")
     # Load API keys directly from environment variables (background)
-    env_key = os.environ.get("GROQ_API_KEY", "")
-    GROQ_API_KEYS = [env_key] if env_key else []
+    env_key = os.environ.get("OPENROUTER_API_KEY", "")
+    OPENROUTER_API_KEYS = [env_key] if env_key else []
     
     clear_chat = st.button("🗑 Clear Chat History")
 
@@ -41,7 +41,7 @@ with st.sidebar:
 if "chat_history" not in st.session_state or clear_chat:
     st.session_state.chat_history = []
 
-chat_module = NewsChat(GROQ_API_KEYS) if GROQ_API_KEYS else None
+chat_module = NewsChat(OPENROUTER_API_KEYS) if OPENROUTER_API_KEYS else None
 
 # ── Main Chat UI ─────────────────────────────────────────────────────────────
 st.title("💬 Chat with News Intelligence")
@@ -67,8 +67,8 @@ if "dashboard_data" in st.session_state:
             
         # Generate AI response
         with st.chat_message("assistant"):
-            if not GROQ_API_KEYS:
-                response = "⚠️ **Groq API Key not found.** Please set `GROQ_API_KEY` in your `.env` file in the project background."
+            if not OPENROUTER_API_KEYS:
+                response = "⚠️ **OpenRouter API Key not found.** Please set `OPENROUTER_API_KEY` in your `.env` file in the project background."
                 st.markdown(response)
             else:
                 with st.spinner("🧠 Querying intelligence context..."):

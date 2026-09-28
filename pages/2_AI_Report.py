@@ -57,14 +57,14 @@ with st.sidebar:
 
 # ── Parse API Keys ────────────────────────────────────────────────────────────
 # Load API keys directly from environment variables (background)
-env_key = os.environ.get("GROQ_API_KEY", "")
-GROQ_API_KEYS = [env_key] if env_key else []
+env_key = os.environ.get("OPENROUTER_API_KEY", "")
+OPENROUTER_API_KEYS = [env_key] if env_key else []
 
-analyst_engine = MarketAnalyst(GROQ_API_KEYS) if GROQ_API_KEYS else None
+analyst_engine = MarketAnalyst(OPENROUTER_API_KEYS) if OPENROUTER_API_KEYS else None
 
 # ── Main Report UI ────────────────────────────────────────────────────────────
 st.title("📋 AI Institutional Analyst Report")
-st.caption("Powered by Groq · LLaMA 3 70B · Grounded in Live News Context")
+st.caption("Powered by OpenRouter · LLaMA 3.3 70B · Grounded in Live News Context")
 st.markdown("---")
 
 if has_data:
@@ -73,8 +73,8 @@ if has_data:
     articles = df[["title", "description"]].head(15).to_dict("records")
 
     if generate_btn:
-        if not GROQ_API_KEYS:
-            st.error("⚠️ **Groq API Key not found.** Please set `GROQ_API_KEY` in your `.env` file in the project background.")
+        if not OPENROUTER_API_KEYS:
+            st.error("⚠️ **OpenRouter API Key not found.** Please set `OPENROUTER_API_KEY` in your `.env` file in the project background.")
         else:
             with st.spinner(f"🧠 Synthesizing institutional intelligence for **{industry}**..."):
                 report = analyst_engine.generate_sector_report(industry, articles)
@@ -86,7 +86,7 @@ if has_data:
         if report.get("overall_sentiment") == "Error generating report":
             error_msg = report.get("key_drivers", ["Unknown error"])[0]
             st.error(f"❌ **API Error:** {error_msg}")
-            st.info("💡 **Tip:** It looks like there is an issue with your Groq API account (e.g., rate limit, invalid key, or organization restriction). Please check your Groq dashboard.")
+            st.info("💡 **Tip:** It looks like there is an issue with your OpenRouter API account (e.g., rate limit, invalid key, or organization restriction). Please check your OpenRouter dashboard.")
             st.stop()
 
         # ── SENTIMENT BANNER ─────────────────────────────────────────────────

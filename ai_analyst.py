@@ -1,10 +1,10 @@
 import json
-from groq_client import MultiKeyGroqClient
+from groq_client import MultiKeyOpenRouterClient
 
 class MarketAnalyst:
-    """Uses Groq for generating analyst-level reports based on aggregated industry news."""
+    """Uses OpenRouter LLaMA 3.3 70B for generating analyst-level reports based on aggregated industry news."""
     def __init__(self, api_keys: list[str]):
-        self.client = MultiKeyGroqClient(api_keys)
+        self.client = MultiKeyOpenRouterClient(api_keys)
 
     def generate_sector_report(self, sector: str, articles: list[dict]) -> dict:
         """Crafts a comprehensive analyst report from a list of market articles."""

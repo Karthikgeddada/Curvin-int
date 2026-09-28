@@ -1,7 +1,7 @@
 https://curvin-intelligence.streamlit.app/
 # Corvin Intelligence — AI Market Intelligence Platform
 
-A production-grade, multi-industry AI system that analyzes real-time financial and sector-based news using **FinBERT** for sentiment analysis and **Groq (LLaMA 3)** for analyst-level insights.
+A production-grade, multi-industry AI system that analyzes real-time financial and sector-based news using **FinBERT** for sentiment analysis and **OpenRouter (LLaMA 3.3 70B)** for analyst-level insights.
 
 ---
 
@@ -21,7 +21,7 @@ User Input (Industry + Article Count)
   Structured Dataset
         ↓
   ├── Dashboard  (Visual Analytics — Plotly)
-  ├── LLM (Groq) → Analyst Report
+  ├── LLM (OpenRouter) → Analyst Report
   └── Chat Module (RAG-lite)
         ↓
   Streamlit Multi-Page UI
@@ -36,7 +36,7 @@ Finance · Banking · Insurance · Healthcare · Pharmaceuticals · Biotechnolog
 | Layer | Technology |
 |---|---|
 | Sentiment | ProsusAI/FinBERT (HuggingFace Transformers) |
-| LLM | Groq API — LLaMA 3 70B |
+| LLM | OpenRouter API — LLaMA 3.3 70B Instruct |
 | News | Google News RSS (feedparser) |
 | Visualisation | Plotly |
 | UI | Streamlit (multi-page) |
@@ -60,9 +60,9 @@ ai-market-intelligence/
 ├── pipeline.py              # Orchestration (fetch → dedupe → sentiment)
 ├── fetch_news.py            # Google News RSS ingestion
 ├── sentiment_analysis.py    # FinBERT engine
-├── ai_analyst.py            # Groq LLM analyst report generator
+├── ai_analyst.py            # OpenRouter LLM analyst report generator
 ├── chat_with_news.py        # RAG-lite chat module
-├── groq_client.py           # Multi-key Groq client with rotation
+├── groq_client.py           # Multi-key OpenRouter client with rotation
 ├── pages/
 │   ├── 1_Dashboard.py       # Visual analytics dashboard
 │   ├── 2_AI_Report.py       # LLM-generated analyst report
@@ -77,7 +77,7 @@ ai-market-intelligence/
 
 ## API Key Configuration
 
-The platform supports **multi-key rotation** for Groq. Enter your key(s) in the sidebar of the AI Report or Chat pages. For production, set environment variables or use `st.secrets`.
+The platform supports **multi-key rotation** for OpenRouter. Set your `OPENROUTER_API_KEY` in a `.env` file in the project root. For production deployment, use `st.secrets` or environment variables.
 
 ## License
 
