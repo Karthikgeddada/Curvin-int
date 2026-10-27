@@ -1,9 +1,11 @@
 import feedparser
 import pandas as pd
 import requests
+import logging
 from bs4 import BeautifulSoup
-from utils.query_builder import get_query_variations
 from utils.deduplicator import deduplicate_news
+
+logger = logging.getLogger("fetch_news")
 
 REGION_PARAMS = {
     "United States": "hl=en-US&gl=US&ceid=US:en",
@@ -50,8 +52,14 @@ def fetch_industry_news(industry: str, max_articles: int = 50, region: str = "Un
                         'source': entry.source.title if 'source' in entry else 'Unknown',
                         'description': entry.summary if 'summary' in entry else ''
                     })
-        except Exception:
-            pass
+            else:
+                logger.warning(f"Google News returned HTTP {response.status_code} for query: {query}")
+        except requests.exceptions.Timeout:
+            logger.warning(f"Request timed out for query: {query}")
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"Request failed for query '{query}': {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error fetching query '{query}': {e}")
 
             
             # Fast-break if we have enough raw articles for deduplication logic

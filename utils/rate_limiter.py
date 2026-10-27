@@ -1,6 +1,5 @@
 import time
 from collections import deque
-from typing import Optional
 
 class RateLimiter:
     """Implements a Token Bucket/Sliding Window Rate Limiter for API calls."""
@@ -10,21 +9,21 @@ class RateLimiter:
         self.requests = deque()
 
     def wait_if_needed(self):
-        """Standard blocking wait to adhere to rate limits."""
-        now = time.time()
-        # Remove timestamps outside the sliding window
-        while self.requests and self.requests[0] < now - self.time_window:
-            self.requests.popleft()
-        
-        if len(self.requests) >= self.max_requests:
-            # Wait until the oldest request in the window is expired
+        """Standard blocking wait to adhere to rate limits (iterative)."""
+        while True:
+            now = time.time()
+            # Remove timestamps outside the sliding window
+            while self.requests and self.requests[0] < now - self.time_window:
+                self.requests.popleft()
+
+            if len(self.requests) < self.max_requests:
+                self.requests.append(time.time())
+                return
+
+            # Wait until the oldest request in the window expires, then re-check
             sleep_time = self.requests[0] + self.time_window - now
             if sleep_time > 0:
                 time.sleep(sleep_time)
-            # After sleeping, recursion to re-check window
-            self.wait_if_needed()
-        else:
-            self.requests.append(time.time())
 
 class KeyRotator:
     """Manages rotation, fallback, and rate limiting across multiple API keys."""

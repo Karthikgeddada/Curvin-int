@@ -1,4 +1,4 @@
-from groq_client import MultiKeyOpenRouterClient
+from openrouter_client import MultiKeyOpenRouterClient
 import streamlit as st
 
 class NewsChat:

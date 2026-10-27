@@ -1,9 +1,11 @@
 import json
-from groq_client import MultiKeyOpenRouterClient
+from openrouter_client import MultiKeyOpenRouterClient
 
 class MarketAnalyst:
     """Uses OpenRouter LLaMA 3.3 70B for generating analyst-level reports based on aggregated industry news."""
     def __init__(self, api_keys: list[str]):
+        if not api_keys:
+            raise ValueError("No OpenRouter API keys provided. Set OPENROUTER_API_KEY in .env")
         self.client = MultiKeyOpenRouterClient(api_keys)
 
     def generate_sector_report(self, sector: str, articles: list[dict]) -> dict:

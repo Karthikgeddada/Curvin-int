@@ -31,8 +31,13 @@ with st.sidebar:
     st.header("⚙️ Intelligence Controls")
     
     st.markdown("---")
-    # Load API keys directly from environment variables (background)
+    # Load API keys from environment variables (.env for local) or st.secrets (Streamlit Cloud)
     env_key = os.environ.get("OPENROUTER_API_KEY", "")
+    if not env_key:
+        try:
+            env_key = st.secrets.get("OPENROUTER_API_KEY", "")
+        except Exception:
+            pass
     OPENROUTER_API_KEYS = [env_key] if env_key else []
     
     clear_chat = st.button("🗑 Clear Chat History")

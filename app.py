@@ -89,7 +89,7 @@ st.markdown("""
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown('<div class="sidebar-title">🧠 Corvin Intelligence</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-title">🧠 Curvin Intelligence</div>', unsafe_allow_html=True)
     st.markdown('<div class="sidebar-subtitle">AI-Powered Market Intelligence Platform</div>', unsafe_allow_html=True)
     st.markdown("---")
     st.markdown("### Navigation")
@@ -108,7 +108,7 @@ st.markdown("""
 <div style="text-align:center; padding: 3rem 1rem 2rem;">
     <h1 style="font-size: 3rem; font-weight: 800; background: linear-gradient(90deg, #3B82F6, #6366F1, #8B5CF6);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem;">
-        Corvin Intelligence
+        Curvin Intelligence
     </h1>
     <p style="color:#4B5563; font-size: 1.15rem; max-width: 600px; margin: 0 auto 2rem;">
         Institutional-grade market intelligence powered by FinBERT sentiment analysis 

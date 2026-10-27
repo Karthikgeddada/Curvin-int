@@ -25,19 +25,24 @@ class SentimentAnalyzer:
     Enterprise-grade FinBERT sentiment engine.
     Processes financial text with 512-token truncation and returns
     sentiment label + confidence score per article.
+    Uses batched inference for improved throughput on large article sets.
     """
 
     # FinBERT label mapping: 0 → Positive, 1 → Negative, 2 → Neutral
     LABELS = {0: "Positive", 1: "Negative", 2: "Neutral"}
     MAX_TOKENS = 512
+    BATCH_SIZE = 16
 
     def __init__(self):
         self.tokenizer, self.model = _load_finbert()
 
-    def _predict(self, text: str) -> dict:
-        """Runs a single inference pass and returns label + confidence."""
+    def _predict_batch(self, texts: list[str]) -> list[dict]:
+        """Runs a batched inference pass and returns label + confidence per text."""
+        # Truncate input texts to a safe char cap before tokenization
+        truncated = [str(t)[:2000] for t in texts]
+
         inputs = self.tokenizer(
-            text[:2000],          # Hard char cap to prevent OOM before tokenization
+            truncated,
             return_tensors="pt",
             truncation=True,
             max_length=self.MAX_TOKENS,
@@ -45,29 +50,35 @@ class SentimentAnalyzer:
         )
         with torch.no_grad():
             logits = self.model(**inputs).logits
-            scores = torch.softmax(logits, dim=1).squeeze()
+            scores = torch.softmax(logits, dim=1)
 
-        label_id = int(torch.argmax(scores).item())
-        return {
-            "sentiment": self.LABELS[label_id],
-            "confidence": round(float(scores[label_id].item()), 4),
-        }
+        results = []
+        for i in range(len(truncated)):
+            label_id = int(torch.argmax(scores[i]).item())
+            results.append({
+                "sentiment": self.LABELS[label_id],
+                "confidence": round(float(scores[i][label_id].item()), 4),
+            })
+        return results
 
     def analyze(self, texts: list) -> pd.DataFrame:
         """
-        Processes a list of article strings through FinBERT.
+        Processes a list of article strings through FinBERT in batches.
         Returns a DataFrame with 'sentiment' and 'confidence' columns.
         """
         if not texts:
             return pd.DataFrame(columns=["sentiment", "confidence"])
 
         results = []
-        for text in texts:
+        str_texts = [str(t) for t in texts]
+
+        for i in range(0, len(str_texts), self.BATCH_SIZE):
+            batch = str_texts[i : i + self.BATCH_SIZE]
             try:
-                results.append(self._predict(str(text)))
+                results.extend(self._predict_batch(batch))
             except Exception as e:
-                logger.warning(f"Prediction failed for one article: {e}")
-                results.append({"sentiment": "Neutral", "confidence": 0.0})
+                logger.warning(f"Batch prediction failed (batch {i//self.BATCH_SIZE}): {e}")
+                results.extend([{"sentiment": "Neutral", "confidence": 0.0}] * len(batch))
 
         return pd.DataFrame(results)
 
