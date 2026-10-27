@@ -1,5 +1,5 @@
 https://curvin-intelligence.streamlit.app/
-# Corvin Intelligence — AI Market Intelligence Platform
+# Curvin Intelligence — AI Market Intelligence Platform
 
 A production-grade, multi-industry AI system that analyzes real-time financial and sector-based news using **FinBERT** for sentiment analysis and **OpenRouter (LLaMA 3.3 70B)** for analyst-level insights.
 
