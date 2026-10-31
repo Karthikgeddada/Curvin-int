@@ -8,21 +8,25 @@ st.set_page_config(page_title="Market Intelligence Dashboard", page_icon="📊",
 
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-    .stApp { background-color: #FAFAFA; color: #111827; }
-    [data-testid="stSidebar"] { background-color: #F8FAFC; border-right:1px solid #E5E7EB; }
+    html, body, [class*="css"] { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+    .stApp { background-color: #FFFFFF; color: #1d1d1f; }
+    [data-testid="stSidebar"] {
+        background: rgba(255, 255, 255, 0.78);
+        -webkit-backdrop-filter: saturate(180%) blur(20px);
+        backdrop-filter: saturate(180%) blur(20px);
+        border-right: 1px solid #d2d2d7;
+    }
     .main .block-container { padding: 2rem 2.5rem; max-width: 1400px; }
-    [data-testid="stMetric"] { background: #FFFFFF; border:1px solid #E5E7EB; border-radius:12px; padding:1.25rem !important; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); }
-    [data-testid="stMetricValue"] { color:#111827; font-weight:800; }
-    [data-testid="stMetricLabel"] { color:#6B7280; font-weight:500; }
-    .stButton > button { background: linear-gradient(90deg,#3B82F6,#6366F1); color:white; border:none; border-radius:8px; padding:.6rem 1.5rem; font-weight:600; transition:all .2s ease; box-shadow:0 4px 6px -1px rgba(59,130,246,0.25); }
-    .stButton > button:hover { transform:translateY(-2px); box-shadow:0 6px 10px -1px rgba(59,130,246,0.4); color: white; }
-    h1 { color:#111827 !important; font-weight:800 !important; }
-    h2, h3 { color:#1F2937 !important; font-weight:600 !important; }
-    hr { border-color:#E5E7EB; }
-    .stPlotlyChart { background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 12px; padding: 1rem; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); }
-    div[data-testid="stExpander"] { background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 12px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); }
+    [data-testid="stMetric"] { background: #f5f5f7; border: none; border-radius: 18px; padding: 1.5rem 1.25rem !important; }
+    [data-testid="stMetricValue"] { color: #1d1d1f; font-weight: 600; letter-spacing: -0.02em; }
+    [data-testid="stMetricLabel"] { color: #6e6e73; font-weight: 500; }
+    .stButton > button { background:#0071e3; color:#ffffff; border:none; border-radius:980px; padding:.5rem 1.6rem; font-weight:600; font-size:1rem; transition:background .18s ease; box-shadow:none; }
+    .stButton > button:hover { background:#0077ed; color:#ffffff; }
+    h1 { color:#1d1d1f !important; font-weight:700 !important; letter-spacing:-0.025em !important; }
+    h2, h3 { color:#1d1d1f !important; font-weight:600 !important; letter-spacing:-0.02em !important; }
+    hr { border-color:#d2d2d7; }
+    .stPlotlyChart { background: #FFFFFF; border: 1px solid #e8e8ed; border-radius: 18px; padding: 1.25rem; }
+    div[data-testid="stExpander"] { background: #f5f5f7; border: none; border-radius: 18px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -93,7 +97,7 @@ if st.session_state.dashboard_data is not None:
             df['sentiment'].value_counts().reset_index(),
             x='sentiment', y='count',
             color='sentiment',
-            color_discrete_map={"Positive": "#10B981", "Negative": "#EF4444", "Neutral": "#6366F1"},
+            color_discrete_map={"Positive": "#10B981", "Negative": "#EF4444", "Neutral": "#86868b"},
             template="plotly_white"
         )
         st.plotly_chart(fig_bar, use_container_width=True)
@@ -103,7 +107,7 @@ if st.session_state.dashboard_data is not None:
         fig_pie = px.pie(
             df, names='sentiment',
             color='sentiment',
-            color_discrete_map={"Positive": "#10B981", "Negative": "#EF4444", "Neutral": "#6366F1"},
+            color_discrete_map={"Positive": "#10B981", "Negative": "#EF4444", "Neutral": "#86868b"},
             hole=0.4,
             template="plotly_white"
         )
@@ -114,7 +118,7 @@ if st.session_state.dashboard_data is not None:
     fig_hist = px.histogram(
         df, x="confidence", color="sentiment",
         nbins=20, barmode="overlay",
-        color_discrete_map={"Positive": "#10B981", "Negative": "#EF4444", "Neutral": "#6366F1"},
+        color_discrete_map={"Positive": "#10B981", "Negative": "#EF4444", "Neutral": "#86868b"},
         template="plotly_white"
     )
     st.plotly_chart(fig_hist, use_container_width=True)
@@ -132,11 +136,10 @@ else:
     st.markdown("<br>", unsafe_allow_html=True)
     st.info("👈 Select an industry in the sidebar and click **🔍 Fetch Intelligence** to populate the dashboard.", icon="📊")
     st.markdown("""
-    <div style="background:#FFFFFF; border:1px solid #E5E7EB; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);
-        border-radius:16px; padding:4rem 2rem; text-align:center; margin-top:2rem;">
+    <div style="background:#f5f5f7; border-radius:18px; padding:4.5rem 2rem; text-align:center; margin-top:2rem;">
         <div style="font-size:4rem; margin-bottom:1rem;">📊</div>
-        <h2 style="color:#111827; margin:0 0 0.5rem; font-weight:700;">Market Pulse Ready</h2>
-        <p style="color:#6B7280; font-size:1.1rem; max-width:500px; margin:0 auto;">
+        <h2 style="color:#1d1d1f; margin:0 0 0.5rem; font-weight:700; letter-spacing:-0.02em;">Market Pulse Ready</h2>
+        <p style="color:#86868b; font-size:1.1rem; max-width:520px; margin:0 auto;">
             Select an industry in the sidebar and fetch the latest intelligence to generate real-time analytics.
         </p>
     </div>

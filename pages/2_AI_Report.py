@@ -10,27 +10,31 @@ st.set_page_config(page_title="AI Analyst Report", page_icon="📋", layout="wid
 
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-    .stApp { background-color: #FAFAFA; color: #111827; }
-    [data-testid="stSidebar"] { background-color: #F8FAFC; border-right:1px solid #E5E7EB; }
-    .main .block-container { padding: 2rem 2.5rem; max-width: 1400px; }
-    .stButton > button { background: linear-gradient(90deg,#3B82F6,#6366F1); color:white; border:none; border-radius:8px; padding:.6rem 1.5rem; font-weight:600; transition:all .2s ease; box-shadow:0 4px 6px -1px rgba(59,130,246,0.25); }
-    .stButton > button:hover { transform:translateY(-2px); box-shadow:0 6px 10px -1px rgba(59,130,246,0.4); color: white; }
-    .stButton > button:disabled { background: #F3F4F6; color:#9CA3AF; box-shadow:none; cursor:not-allowed; }
-    h1 { color:#111827 !important; font-weight:800 !important; }
-    h2, h3 { color:#1F2937 !important; font-weight:600 !important; }
-    hr { border-color:#E5E7EB; }
-    /* Card containers */
-    [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlockBorderWrapper"] {
-        background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 16px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);
+    html, body, [class*="css"] { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+    .stApp { background-color: #FFFFFF; color: #1d1d1f; }
+    [data-testid="stSidebar"] {
+        background: rgba(255, 255, 255, 0.78);
+        -webkit-backdrop-filter: saturate(180%) blur(20px);
+        backdrop-filter: saturate(180%) blur(20px);
+        border-right: 1px solid #d2d2d7;
     }
-    /* Alert overrides */
-    .stSuccess { background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 12px; color: #166534; }
-    .stError { background: #FEF2F2; border: 1px solid #FECACA; border-radius: 12px; color: #991B1B; }
-    .stInfo { background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 12px; color: #1E3A8A; }
-    .stWarning { background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 12px; color: #92400E; }
-    div[data-testid="stExpander"] { background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 12px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); }
+    .main .block-container { padding: 2rem 2.5rem; max-width: 1400px; }
+    .stButton > button { background:#0071e3; color:#ffffff; border:none; border-radius:980px; padding:.5rem 1.6rem; font-weight:600; font-size:1rem; transition:background .18s ease; box-shadow:none; }
+    .stButton > button:hover { background:#0077ed; color:#ffffff; }
+    .stButton > button:disabled { background: #f5f5f7; color:#86868b; box-shadow:none; cursor:not-allowed; }
+    h1 { color:#1d1d1f !important; font-weight:700 !important; letter-spacing:-0.025em !important; }
+    h2, h3 { color:#1d1d1f !important; font-weight:600 !important; letter-spacing:-0.02em !important; }
+    hr { border-color:#d2d2d7; }
+    /* Card containers — soft gray tiles */
+    [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlockBorderWrapper"] {
+        background: #f5f5f7; border: none; border-radius: 18px; padding: 0.25rem;
+    }
+    /* Alerts — soft, borderless, rounded */
+    .stSuccess { background: #f0f7f0; border: none; border-radius: 18px; color: #1d1d1f; }
+    .stError { background: #fbf0f0; border: none; border-radius: 18px; color: #1d1d1f; }
+    .stInfo { background: #f5f5f7; border: none; border-radius: 18px; color: #1d1d1f; }
+    .stWarning { background: #fbf7ee; border: none; border-radius: 18px; color: #1d1d1f; }
+    div[data-testid="stExpander"] { background: #f5f5f7; border: none; border-radius: 18px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -69,13 +73,21 @@ analyst_engine = MarketAnalyst(OPENROUTER_API_KEYS) if OPENROUTER_API_KEYS else 
 
 # ── Main Report UI ────────────────────────────────────────────────────────────
 st.title("📋 AI Institutional Analyst Report")
-st.caption("Powered by OpenRouter · LLaMA 3.3 70B · Grounded in Live News Context")
+st.caption("Powered by OpenRouter · LLaMA 3.3 70B · Grounded in Full Article Text")
 st.markdown("---")
 
 if has_data:
     df = st.session_state.dashboard_data
     industry = st.session_state.get("selected_industry", "Finance")
-    articles = df[["title", "description"]].head(15).to_dict("records")
+    # Prefer the deep-read full article text when available (snippet otherwise)
+    top = df.head(15)
+    articles = [
+        {
+            "title": row["title"],
+            "description": row["deep_text"] if row.get("has_full_text") else row["description"],
+        }
+        for _, row in top.iterrows()
+    ]
 
     if generate_btn:
         if not OPENROUTER_API_KEYS:
@@ -102,17 +114,16 @@ if has_data:
         elif "negative" in sentiment_raw.lower():
             banner_color = "#EF4444"; icon_s = "📉"
         else:
-            banner_color = "#6366F1"; icon_s = "➡️"
+            banner_color = "#86868b"; icon_s = "➡️"
 
         st.markdown(f"""
-        <div style="background:#FFFFFF;
-            border-left: 6px solid {banner_color}; border: 1px solid #E5E7EB; border-left-width: 6px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-            border-radius:16px; padding:1.5rem 2rem; margin-bottom:2rem;">
-            <p style="color:#6B7280;font-size:0.85rem;text-transform:uppercase;font-weight:700;margin:0;letter-spacing:1px;">
+        <div style="background:#f5f5f7;
+            border: none; border-radius: 18px;
+            padding:1.75rem 2rem; margin-bottom:2rem;">
+            <p style="color:#86868b;font-size:0.8rem;text-transform:uppercase;font-weight:600;margin:0;letter-spacing:0.08em;">
                 {icon_s} Overall Market Sentiment — {industry}
             </p>
-            <h2 style="color:#111827;margin:0.4rem 0 0; font-size:1.8rem; font-weight:800;">{sentiment_raw}</h2>
+            <h2 style="color:#1d1d1f;margin:0.4rem 0 0; font-size:1.9rem; font-weight:700; letter-spacing:-0.02em;">{sentiment_raw}</h2>
         </div>
         """, unsafe_allow_html=True)
 
@@ -176,11 +187,10 @@ if has_data:
 else:
     st.warning("⚠️ No data available. Please navigate to the **Dashboard** page and fetch industry news first.")
     st.markdown("""
-    <div style="background:#FFFFFF; border:1px solid #E5E7EB; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);
-        border-radius:16px; padding:4rem 2rem; text-align:center; margin-top:2rem;">
+    <div style="background:#f5f5f7; border-radius:18px; padding:4.5rem 2rem; text-align:center; margin-top:2rem;">
         <div style="font-size:4rem; margin-bottom:1rem;">📋</div>
-        <h2 style="color:#111827; margin:0 0 0.5rem; font-weight:700;">Analyst Report Engine</h2>
-        <p style="color:#6B7280; font-size:1.1rem; max-width:500px; margin:0 auto;">
+        <h2 style="color:#1d1d1f; margin:0 0 0.5rem; font-weight:700; letter-spacing:-0.02em;">Analyst Report Engine</h2>
+        <p style="color:#86868b; font-size:1.1rem; max-width:520px; margin:0 auto;">
             Fetch market news first in the Dashboard, then return here to generate a full institutional-grade sector briefing.
         </p>
     </div>

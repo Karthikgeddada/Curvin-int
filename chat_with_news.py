@@ -1,5 +1,4 @@
 from openrouter_client import MultiKeyOpenRouterClient
-import streamlit as st
 
 class NewsChat:
     """Uses OpenRouter LLaMA 3.3 70B for RAG-lite chat with local news context."""

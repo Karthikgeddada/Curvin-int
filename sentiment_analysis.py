@@ -1,5 +1,4 @@
-import torch
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+import os
 import pandas as pd
 import streamlit as st
 import logging
@@ -12,6 +11,10 @@ logger = logging.getLogger("sentiment_analysis")
 @st.cache_resource(show_spinner="⚙️ Loading FinBERT model (first run only)...")
 def _load_finbert():
     """Loads and caches ProsusAI/finbert tokenizer and model weights."""
+    # Lazy import: torch/transformers stay out of the process entirely when the
+    # Gemini provider is active (light deployments skip the ~500MB model).
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification
+
     model_name = "ProsusAI/finbert"
     logger.info(f"Loading FinBERT from HuggingFace: {model_name}")
     tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -48,6 +51,9 @@ class SentimentAnalyzer:
             max_length=self.MAX_TOKENS,
             padding=True,
         )
+        # Lazy import: only needed when the FinBERT engine actually runs
+        import torch
+
         with torch.no_grad():
             logits = self.model(**inputs).logits
             scores = torch.softmax(logits, dim=1)
@@ -83,11 +89,34 @@ class SentimentAnalyzer:
         return pd.DataFrame(results)
 
 
+def resolve_sentiment_provider() -> str:
+    """
+    Picks the sentiment engine:
+    - SENTIMENT_PROVIDER env var wins if set to 'gemini' or 'finbert'
+    - Otherwise: Gemini when a real GEMINI_API_KEY is configured, else FinBERT
+    """
+    explicit = os.getenv("SENTIMENT_PROVIDER", "").strip().lower()
+    if explicit in ("gemini", "finbert"):
+        return explicit
+    try:
+        from sentiment_gemini import gemini_available
+        if gemini_available():
+            return "gemini"
+    except Exception:
+        pass
+    return "finbert"
+
+
 def apply_sentiment_to_news(news_df: pd.DataFrame) -> pd.DataFrame:
     """
-    Enriches the news DataFrame with FinBERT sentiment scores.
+    Enriches the news DataFrame with sentiment scores.
+    Provider: Gemini API (LLM) when configured, FinBERT (local) otherwise.
     Uses the 'full_text' column (title + description) for analysis.
     """
+    if resolve_sentiment_provider() == "gemini":
+        from sentiment_gemini import apply_gemini_sentiment_to_news  # lazy
+        return apply_gemini_sentiment_to_news(news_df)
+
     analyzer = SentimentAnalyzer()
     sentiment_df = analyzer.analyze(news_df["full_text"].tolist())
     return pd.concat([news_df.reset_index(drop=True), sentiment_df], axis=1)

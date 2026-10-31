@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Curvin Intelligence | Market AI Platform</title>
+  <meta name="description" content="Institutional-grade market intelligence powered by Gemini sentiment analysis and OpenRouter LLaMA 3.3 70B.">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+  <script src="config.js"></script>
+</head>
+<body>
+
+  <nav class="nav">
+    <a class="nav-brand" href="#">Curvin Intelligence</a>
+    <div class="segmented" role="tablist" aria-label="Sections">
+      <button class="seg-btn active" data-view="dashboard" role="tab" aria-selected="true">Dashboard</button>
+      <button class="seg-btn" data-view="report" role="tab" aria-selected="false">AI Report</button>
+      <button class="seg-btn" data-view="chat" role="tab" aria-selected="false">Chat</button>
+    </div>
+  </nav>
+
+  <!-- ══ DASHBOARD VIEW ══════════════════════════════════════════ -->
+  <main id="view-dashboard" class="view active">
+    <section class="hero">
+      <h1>Market intelligence,<br>in real time.</h1>
+      <p>Monitor 30+ industries with AI sentiment analysis and institutional-grade reports.</p>
+    </section>
+
+    <section class="tile controls">
+      <div class="control-grid">
+        <label>Target Industry
+          <select id="industry"></select>
+        </label>
+        <label>Region
+          <select id="region"></select>
+        </label>
+        <label>Article Count
+          <input id="max-articles" type="number" min="1" max="500" value="50">
+        </label>
+        <button id="fetch-btn" class="btn">Fetch Intelligence</button>
+      </div>
+      <div id="fetch-status" class="status" role="status"></div>
+    </section>
+
+    <section class="metrics" id="metrics" hidden>
+      <div class="tile metric"><div class="metric-value" id="m-total">—</div><div class="metric-label">Total Articles</div></div>
+      <div class="tile metric"><div class="metric-value" id="m-pos">—</div><div class="metric-label">Positive Sentiment</div></div>
+      <div class="tile metric"><div class="metric-value" id="m-neg">—</div><div class="metric-label">Negative Sentiment</div></div>
+      <div class="tile metric"><div class="metric-value" id="m-neu">—</div><div class="metric-label">Neutral Sentiment</div></div>
+    </section>
+
+    <section class="charts" id="charts" hidden>
+      <div class="tile chart-tile"><h3>Sentiment Distribution</h3><div id="chart-bar" class="chart"></div></div>
+      <div class="tile chart-tile"><h3>Sentiment Ratio</h3><div id="chart-pie" class="chart"></div></div>
+      <div class="tile chart-tile wide"><h3>Confidence Distribution</h3><div id="chart-hist" class="chart"></div></div>
+    </section>
+
+    <section class="tile feed-tile" id="feed-section" hidden>
+      <h3>Raw Intelligence Feed</h3>
+      <div class="table-wrap">
+        <table id="feed-table">
+          <thead><tr><th>Title</th><th>Source</th><th>Published</th><th>Sentiment</th><th>Confidence</th></tr></thead>
+          <tbody id="feed-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="tile empty" id="dashboard-empty">
+      <div class="empty-emoji">📊</div>
+      <h2>Market Pulse Ready</h2>
+      <p>Select an industry above and fetch the latest intelligence to generate real-time analytics.</p>
+    </section>
+  </main>
+
+  <!-- ══ AI REPORT VIEW ═══════════════════════════════════════════ -->
+  <main id="view-report" class="view">
+    <h1 class="page-title">AI Analyst Report</h1>
+    <p class="page-sub">Powered by OpenRouter · LLaMA 3.3 70B · Grounded in live news context</p>
+
+    <section class="tile controls">
+      <button id="report-btn" class="btn" disabled>Generate Analyst Report</button>
+      <div id="report-status" class="status" role="status"></div>
+    </section>
+
+    <div id="report-banner" class="tile banner" hidden>
+      <p class="banner-label" id="banner-label"></p>
+      <h2 id="banner-value"></h2>
+    </div>
+
+    <div id="report-grid" class="report-grid" hidden>
+      <div class="tile report-card"><h3>🚀 Key Market Drivers</h3><ul id="list-drivers" class="report-list"></ul></div>
+      <div class="tile report-card"><h3>⚠️ Critical Risks</h3><ul id="list-risks" class="report-list"></ul></div>
+      <div class="tile report-card"><h3>💡 Sector Opportunities</h3><ul id="list-opps" class="report-list"></ul></div>
+      <div class="tile report-card"><h3>👀 Entities to Watch</h3><ul id="list-entities" class="report-list"></ul></div>
+    </div>
+
+    <section class="tile empty" id="report-empty">
+      <div class="empty-emoji">📋</div>
+      <h2>Analyst Report Engine</h2>
+      <p>Fetch market news on the Dashboard first, then return here to generate a full institutional-grade sector briefing.</p>
+    </section>
+
+    <p class="disclaimer" id="report-disclaimer" hidden>AI-generated from real-time news data. Not financial advice — always verify with primary sources.</p>
+  </main>
+
+  <!-- ══ CHAT VIEW ════════════════════════════════════════════════ -->
+  <main id="view-chat" class="view">
+    <h1 class="page-title">Chat with News</h1>
+    <p class="page-sub" id="chat-sub">Context-aware chat grounded in live news — no hallucinations.</p>
+
+    <section class="tile chat-shell">
+      <div id="chat-log" class="chat-log">
+        <div class="chat-msg assistant">Fetch news on the Dashboard first, then ask anything about the market.</div>
+      </div>
+      <form id="chat-form" class="chat-form">
+        <input id="chat-input" type="text" placeholder="Ask a question about the current market data…" autocomplete="off" disabled>
+        <button class="btn" type="submit" disabled>Send</button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="footer">
+    Powered by Gemini · OpenRouter LLaMA 3.3 70B · Data: Google News RSS — AI output is not financial advice.
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

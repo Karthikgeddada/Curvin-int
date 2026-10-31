@@ -33,7 +33,7 @@ Finance · Banking · Insurance · Healthcare · Pharmaceuticals · Biotechnolog
 
 | Layer | Technology |
 |---|---|
-| Sentiment | ProsusAI/FinBERT (HuggingFace Transformers, batched inference) |
+| Sentiment | Gemini API (default when a key is configured) or ProsusAI/FinBERT locally (batched inference) |
 | LLM | OpenRouter API — LLaMA 3.3 70B Instruct |
 | News | Google News RSS (feedparser + BeautifulSoup) |
 | Visualisation | Plotly |
@@ -71,9 +71,12 @@ Create a `.env` file in the project root (see `.env.example` for a template):
 
 ```
 OPENROUTER_API_KEY=sk-or-v1-your-key-here
+GEMINI_API_KEY=your-key-here
 ```
 
 The platform supports **multi-key rotation** for higher throughput. For production deployment on Streamlit Cloud, use `st.secrets` or environment variables.
+
+**Sentiment engine selection**: when a real `GEMINI_API_KEY` is configured, sentiment runs on the Gemini API (`gemini-flash-lite-latest` by default) instead of downloading the ~500MB FinBERT model. Set `SENTIMENT_PROVIDER=finbert` to force the local FinBERT engine.
 
 ## Project Structure
 
@@ -86,7 +89,9 @@ Curvin-intelligence/
 ├── ai_analyst.py            # OpenRouter LLM analyst report generator
 ├── chat_with_news.py        # RAG-lite chat module
 ├── openrouter_client.py     # Multi-key OpenRouter client with rotation + caching
-├── groq_client.py           # Deprecated shim → re-exports from openrouter_client
+├── sentiment_gemini.py      # Gemini sentiment analyzer (auto-dispatch with FinBERT fallback)
+├── article_scraper.py       # Deep-read: resolves Google News redirects, scrapes full article text
+├── news_store.py            # Postgres/Supabase persistence + history search (RAG history)
 ├── pages/
 │   ├── 1_Dashboard.py       # Visual analytics dashboard
 │   ├── 2_AI_Report.py       # LLM-generated analyst report
@@ -94,7 +99,8 @@ Curvin-intelligence/
 ├── utils/
 │   ├── __init__.py          # Package init
 │   ├── rate_limiter.py      # Sliding-window limiter + key rotator
-│   └── deduplicator.py      # URL + title deduplication
+│   ├── deduplicator.py      # URL + title deduplication
+│   └── query_builder.py      # Industry/region query construction
 ├── .streamlit/
 │   └── config.toml          # Streamlit theme config
 ├── .devcontainer/
