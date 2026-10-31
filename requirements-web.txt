@@ -13,5 +13,5 @@ lxml>=5.0.0
 requests>=2.31.0
 openai>=1.0.0
 google-genai>=0.3.0
-googlenewsdecoder>=1.3.0
+googlenewsdecoder>=0.2.2,<1.0
 psycopg2-binary>=2.9.0
