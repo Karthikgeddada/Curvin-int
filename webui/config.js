@@ -5,4 +5,4 @@
 //
 // - Frontend on Vercel + backend on Render: set it to the Render URL.
 //   Example: window.API_BASE = "https://curvin-intelligence.onrender.com";
-window.API_BASE = "";
+window.API_BASE = "https://curvin-intelligence.onrender.com";
