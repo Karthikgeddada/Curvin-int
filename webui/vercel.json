@@ -1,0 +1,13 @@
+{
+    "$schema": "https://openapi.vercel.sh/vercel.json",
+    "installCommand": "echo 'Static frontend — nothing to install'",
+    "buildCommand": "echo 'Static frontend — nothing to build'",
+    "outputDirectory": ".",
+    "cleanUrls": true,
+    "headers": [
+        {
+            "source": "/config.js",
+            "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+        }
+    ]
+}
