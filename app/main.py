@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 load_dotenv(override=True)
 
 from article_scraper import deep_read_articles
-from fetch_news import fetch_industry_news
+from fetch_news import LAST_FETCH_DIAGNOSTICS, fetch_industry_news
 from sentiment_gemini import apply_gemini_sentiment_to_news, gemini_available
 from news_store import fetch_history, store_articles, store_enabled
 from ai_analyst import MarketAnalyst
@@ -79,6 +79,7 @@ def health():
     """Liveness + configuration probe (used by the frontend and Render)."""
     return {
         "status": "ok",
+        "version": "2.1.0-bing-fallback",
         "sentiment_provider": "gemini" if gemini_available() else "unconfigured",
         "llm_ready": bool(_openrouter_keys()),
     }
@@ -93,9 +94,10 @@ def fetch_and_score(req: FetchRequest):
         raise HTTPException(status_code=502, detail=f"News fetch failed: {e}")
 
     if news_df.empty:
+        diag = "; ".join(LAST_FETCH_DIAGNOSTICS) or "no source attempts recorded"
         raise HTTPException(
             status_code=404,
-            detail="No articles found for this industry and region.",
+            detail=f"No articles found for this industry and region. Sources tried: {diag}",
         )
 
     # Sentiment runs on the Gemini API — torch/FinBERT is intentionally NOT

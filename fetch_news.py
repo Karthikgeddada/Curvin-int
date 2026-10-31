@@ -9,6 +9,9 @@ from utils.deduplicator import deduplicate_news
 
 logger = logging.getLogger("fetch_news")
 
+# Diagnostics from the most recent fetch (surfaced by the API on empty results)
+LAST_FETCH_DIAGNOSTICS: list = []
+
 REGION_PARAMS = {
     "United States": "hl=en-US&gl=US&ceid=US:en",
     "United Kingdom": "hl=en-GB&gl=GB&ceid=GB:en",
@@ -87,42 +90,40 @@ def fetch_industry_news(industry: str, max_articles: int = 50, region: str = "Un
     queries = [f"{base_query} {suffixes[i]} when:14d" for i in range(num_queries_needed)]
     
     all_entries = []
+    LAST_FETCH_DIAGNOSTICS.clear()
     
     # Process each query variation to get a broad range of industry news
     for query in queries:
         encoded_query = requests.utils.quote(query)
         region_param = REGION_PARAMS.get(region, REGION_PARAMS["United States"])
         rss_url = f"https://news.google.com/rss/search?q={encoded_query}&{region_param}"
-        # Use requests with a User-Agent to bypass Google News bot-blocking
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        }
-        
-        try:
-            response = requests.get(rss_url, headers=headers, timeout=10)
-            if response.status_code == 200:
-                feed = feedparser.parse(response.content)
-                for entry in feed.entries:
-                    all_entries.append({
-                        'title': entry.title,
-                        'link': entry.link,
-                        'published': entry.published,
-                        'source': entry.source.title if 'source' in entry else 'Unknown',
-                        'description': entry.summary if 'summary' in entry else ''
-                    })
-            else:
-                logger.warning(f"Google News returned HTTP {response.status_code} for query: {query}")
-        except requests.exceptions.Timeout:
-            logger.warning(f"Request timed out for query: {query}")
-        except requests.exceptions.RequestException as e:
-            logger.warning(f"Request failed for query '{query}': {e}")
-        except Exception as e:
-            logger.error(f"Unexpected error fetching query '{query}': {e}")
 
-            
-            # Fast-break if we have enough raw articles for deduplication logic
-            if len(all_entries) >= max_articles * 3:
-                break
+        response = _http_get(rss_url)
+        if response is None:
+            LAST_FETCH_DIAGNOSTICS.append(f"google '{query[:40]}': unreachable")
+        else:
+            rows = _parse_google_feed(response.content)
+            all_entries.extend(rows)
+            LAST_FETCH_DIAGNOSTICS.append(f"google '{query[:40]}': HTTP 200, {len(rows)} items")
+
+        # Fast-break if we have enough raw articles for deduplication logic
+        if len(all_entries) >= max_articles * 3:
+            break
+
+    # Fallback: cloud-server IPs (Render etc.) are sometimes bot-blocked by
+    # Google News, which then returns zero items. Bing News RSS is keyless
+    # and usually reachable, so use it whenever Google gives us nothing.
+    if not all_entries:
+        logger.warning("Google News returned 0 articles — trying Bing News RSS fallback")
+        bing_query = requests.utils.quote(f"{industry} industry news")
+        bing_url = f"https://www.bing.com/news/search?q={bing_query}&format=RSS"
+        response = _http_get(bing_url)
+        if response is None:
+            LAST_FETCH_DIAGNOSTICS.append("bing: unreachable")
+        else:
+            rows = _parse_bing_feed(response.content)
+            all_entries.extend(rows)
+            LAST_FETCH_DIAGNOSTICS.append(f"bing: HTTP 200, {len(rows)} items")
     
     news_df = pd.DataFrame(all_entries)
     
