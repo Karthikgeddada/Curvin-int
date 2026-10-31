@@ -1,7 +1,9 @@
+import time
 import feedparser
 import pandas as pd
 import requests
 import logging
+from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from utils.deduplicator import deduplicate_news
 
@@ -15,6 +17,62 @@ REGION_PARAMS = {
     "Australia": "hl=en-AU&gl=AU&ceid=AU:en",
     "Global": "hl=en-US&gl=US&ceid=US:en" # Defaults to US edition for general global news
 }
+
+_BROWSER_UA = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+)
+
+
+def _http_get(url: str, attempts: int = 3):
+    """GET with a browser User-Agent, retries and backoff.
+    Returns the response on HTTP 200, else None. Never raises."""
+    headers = {"User-Agent": _BROWSER_UA}
+    for attempt in range(1, attempts + 1):
+        try:
+            resp = requests.get(url, headers=headers, timeout=10)
+            if resp.status_code == 200:
+                return resp
+            logger.warning(f"HTTP {resp.status_code} from {url[:90]} (attempt {attempt}/{attempts})")
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"Request failed (attempt {attempt}/{attempts}): {type(e).__name__}: {str(e)[:120]}")
+        if attempt < attempts:
+            time.sleep(2 * attempt)
+    return None
+
+
+def _parse_google_feed(content: bytes) -> list:
+    """Google News RSS entries -> standard article dicts."""
+    rows = []
+    for entry in feedparser.parse(content).entries:
+        rows.append({
+            'title': entry.title,
+            'link': entry.link,
+            'published': entry.published,
+            'source': entry.source.title if 'source' in entry else 'Unknown',
+            'description': entry.summary if 'summary' in entry else ''
+        })
+    return rows
+
+
+def _parse_bing_feed(content: bytes) -> list:
+    """Bing News RSS entries -> standard article dicts (direct publisher links)."""
+    rows = []
+    for entry in feedparser.parse(content).entries:
+        link = entry.link
+        try:
+            source = urlparse(link).netloc.replace("www.", "")
+        except Exception:
+            source = 'Unknown'
+        rows.append({
+            'title': entry.title,
+            'link': link,
+            'published': entry.get('published', ''),
+            'source': source,
+            'description': entry.summary if 'summary' in entry else ''
+        })
+    return rows
+
 
 def fetch_industry_news(industry: str, max_articles: int = 50, region: str = "United States") -> pd.DataFrame:
     """Fetches real-time news from Google News RSS using a targeted query and sorts by newest first."""
